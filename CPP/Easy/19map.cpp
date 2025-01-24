@@ -16,6 +16,15 @@ m["Alice"] = 90;                // 直接赋值方式
 m.insert(make_pair("Bob", 85));  // 使用 make_pair 插入
 m["Alice"] = 95;                // 修改值
 
+需要引号的情况：键是字符串常量（直接输入 "Alice"）。
+不需要引号的情况：键是变量或非字符串类型（如 int）。
+string key = "Alice";
+m[key] = 100;  // 这里不需要引号，因为 key 变量已存储字符串
+
+m["Bob"] = 90;  // 正确，键是字符串，需要双引号
+
+
+
 m.erase("Bob");                 // 删除键为 Bob 的元素
 删除操作会同时删除 key 和 value。
 map 的元素是由 key-value 组成的，当删除键（key）时，整个键值对都会被移除，无法仅删除 key 或 value 的一部分。
