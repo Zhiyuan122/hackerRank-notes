@@ -185,15 +185,15 @@ catch (const exception& e) 捕获所有标准异常。
 
 
 
-在 BadLengthException 类中，我们定义了一个私有成员变量 length，用于存储错误的用户名长度。因此，必须提供一个构造函数来初始化该变量。
-如果类仅用于提供固定的错误信息（如 MyException），则不需要构造函数，直接重写 what() 即可。
+在 BadLengthException 类中，我们定义了一个私有成员变量 length,用于存储错误的用户名长度。因此，必须提供一个构造函数来初始化该变量。
+如果类仅用于提供固定的错误信息（如 MyException)则不需要构造函数，直接重写 what() 即可。
 
 4. 什么时候需要构造函数？
 如果你的异常类需要存储额外信息，例如：
 
 错误代码
 错误描述
-发生错误的具体参数（如 length）
+发生错误的具体参数(如 length)
 那么你需要一个构造函数来接受这些信息。
 class ValueTooHighException : public exception {
 private:
