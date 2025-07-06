@@ -1,4 +1,110 @@
 /*
+summary:
+（1）声明指针变量：星号和类型放在一起的时候，就改变了类型的定义，表示该变量现在是一个XX型指针
+     如 int * px = &x;
+     integer pointer named px(pointer to x用P前缀表示指针是一个习惯用法)  is set to  "the address of" x 
+     目的： accessing X by reference instead of by value 通过引用来传递而非值
+//
+ (2)解引用dereference: 星号和类型没有放在一起的时候,通过指针找到对应内存地址，并读取其中的值
+ 举例：若想用这个指针把X的值赋给新变量，
+       则int y = *px; y等于指针PX解引用的值
+   integer y is set to the thing pointed to by px
+
+   快速索引表：
+   &x: the address of" x 变量X的地址
+   *x: the thing pointed to by x  指针x所指向的东西
+   int * x:  integer pointer named x 整数型指针X
+
+
+为什么需要指针
+1.函数参数传引用（pass by reference）
+ 比如C中当一个结构体或变量不在函数作用域内，为了让函数修改原始变量, 我们需要通过引用传参“pass the struct by reference”传入指针（地址）。,使得结构体的指针进入XX的作用域，进行修改,目的是为了在函数中直接修改调用者的值
+  void modify(struct Data *d);  // 传入结构体指针
+  
+       我们要“修改主函数里的变量”，才需要传地址，用指针
+       void update(int a, int b);   // 拿到的是 a 和 b 的“副本” 默认是值传递（pass by value）
+       这样写，你在函数里怎么修改 a, b，主函数里的 a, b 都不会变，因为你改的是副本。
+           void update(int *a, int *b);
+       主函数中再传地址进去：
+           update(&a, &b);
+是否使用指针，关键在于你是否想“在函数中修改主函数变量的值”。
+想改：传地址 → 函数用指针参数（或引用）
+
+不想改：传值 → 函数内部自己玩
+
+
+2. 静态分配内存 static allocation  通常放在栈内存中始终在函数作用域内有效，但是当动态内存分配（dynamic allocation）时，通过malloc从堆内存/sbreak等内存分配器分配的内存，你会得到一个指向越界内存的指针（a pointer to memory that is out of scope）
+   二者区别是，一个的大小在compile的时候就确定了，另一个在程序运行的时候能改变
+   1)静态内存分配（static allocation）：
+   变量大小在编译期确定
+   通常分配在栈（stack）
+   生命周期受限于函数作用域
+  
+   2)动态内存分配（dynamic allocation）：
+   比如通过 malloc、new
+   分配在堆（heap）
+   生命周期可控
+   返回的是“指向堆空间的指针”，可能超出当前作用域 → 必须用指针来管理
+
+PS:
+方法一（推荐）
+   函数声明（告诉编译器有这个函数）
+   void update(int *a, int *b);
+   
+   int main() {
+       // 主函数里可以使用 update()
+       update(&a, &b);
+   }
+   
+   void update(int *a, int *b) {
+       // 真正的实现
+   }
+
+ 方法二：直接先写函数定义，再写主函数
+
+
+记忆：
+int main() {
+    int a, b;
+    int *pa = &a, *pb = &b;
+    
+    scanf("%d %d", &a, &b); // scanf() 的第二个及后续参数必须是变量的“地址”，因为要把你输入的值写到那块内存里。
+    update(pa, pb);
+    printf("%d\n%d", a, b);
+    
+    return 0;
+
+}
+
+例外：char name[100];
+scanf("%s", name);   // ⚠️ 不用加 &，因为 name 本身就是地址
+scanf() 要做的事情是：
+读取你输入的数据 → 把这个数据“写”到变量里
+那就必须知道这个变量在内存的哪个位置 → 所以你要传地址
+换句话说：
+你告诉 scanf()：
+你就把读到的东西写到这个地址上吧
+
+
+int main() {
+    int a, b;
+    int *pa = &a, *pb = &b;
+    
+    scanf("%d %d", &a, &b);
+    update(pa, pb);// ✅ 传指针
+    //update(*pa, *pb); ❌ 错：你传的是“值”而不是“地址”； int* pa 这么写你就明白了
+    
+    printf("%d\n%d", a, b);
+    
+    //主函数调用时传入的是指针（地址），函数实现时接收的是指针类型（int*）
+
+    return 0;
+}
+
+
+
+
+
 int val = 10;
 int *p = &val;  // p 存储了 val 的地址 assign the memory address of val to the pointer P
 *p return the value stored in val and any modification to it will be performed on val
