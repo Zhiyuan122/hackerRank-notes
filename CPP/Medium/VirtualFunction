@@ -1,0 +1,370 @@
+/*
+             ┌──────────────┐
+             │   Person     │
+             ├──────────────┤
+             │ name         │
+             │ age          │
+             │              │
+             │ +getdata()   │
+             │ +putdata()   │
+             └─────┬────────┘
+                   │
+        ┌──────────┴──────────┐
+        │                     │
+┌──────────────┐     ┌────────────────┐
+│  Professor   │     │    Student     │
+├──────────────┤     ├────────────────┤
+│ publications │     │ marks[6]       │
+│ cur_id       │     │ cur_id         │
+└──────────────┘     └────────────────┘
+*/
+/******************************************************************************
+
+                              Online C++ Compiler.
+               Code, Compile, Run and Debug C++ program online.
+Write your code in this editor and press "Run" button to compile and execute it.
+
+| 场景              | 默认访问权限        |
+| --------------- | ------------- |
+| **class**（类）    | 默认是 `private` |
+| **struct**（结构体） | 默认是 `public`  |
+
+| 谁来访问？       | `private` | `protected` | `public` |
+| ----------- | --------- | ----------- | -------- |
+| 类的 **内部成员** | ✅ 可访问     | ✅ 可访问       | ✅ 可访问    |
+| **子类**（继承类） | ❌ 不可访问    | ✅ 可访问       | ✅ 可访问    |
+| 类的 **外部**   | ❌ 不可访问    | ❌ 不可访问      | ✅ 可访问    |
+
+
+
+virtual void f() = 0;
+“纯虚函数（pure virtual function）”
+这个函数在基类里不提供实现，只定义函数的存在，强制子类必须去实现。
+= 0在告诉编译器是一个“纯虚函数”，它没有实现。
+
+vtable
+C++ 编译器为每个有虚函数的类自动创建一个虚函数表（vtable），记录这个类所有虚函数的地址。
+每个对象还会包含一个指针，指向它的类的 vtable。这个指针叫做 vptr（虚函数表指针）。
+为了实现：
+Person* p = new Student();多态
+p->getdata(); 
+→ 编译器会通过 vptr -> vtable 查到 Student 的 getdata 函数地址并调用 → 这叫运行时多态
+
+
+如果你有多态（即用 Person* p = new Student();）
+析构函数必须写 virtual
+否则只会调用基类析构函数，不会调用子类析构函数！
+
+
+Polymorphism
+运行时多态（Runtime Polymorphism）：父类指针/引用指向子类对象，并在运行时调用子类的方法。
+依赖的就是：虚函数（virtual）+ 指针/引用
+
+            Person* p             =             new Student();
+含义：定义一个父类类型的指针  is set to  创建一个子类对象，返回地址
+目的：让父类指针指向子类对象
+流程：
+    1. new Student() → 创建一个 Student 类型对象
+    2. 自动调用 Student 的构造函数
+    3. 返回的是这个对象在内存中的地址（类型是 Student*）
+    4. 把地址赋给 Person* p（因为 Student 是 Person 的子类）
+
+p->getdata();  // 调用的是 Student::getdata()
+p->putdata();  // 调用的是 Student::putdata()
+
+4种组合：
+新建子类，调用子类方法  
+        Student s; 
+        s.getdata();
+新建子类，调用父类方法
+        Student s; 
+        s.sayHello();
+新建父类，调用父类方法
+        Person p; 
+        p.sayHello();
+新建父类，调用子类方法
+        Person* p = new Student();
+        p->getdata();
+        不允许——父类根本不知道子类有什么
+所谓父类指针调用子类方法」，靠的是：虚函数（virtual）+ 指针/引用 → 实现运行时多态
+
+
+
+
+静态变量的作用：
+static int id_counter;
+静态变量是全类共享的；非静态变量是每个对象一份。
+一般用来做全局编号、自增计数器等用途
+所以你要“记录创建了多少个对象”，必须用 static，否则每次都从 0 重新开始，编号永远都是 1。
+
+
+
+C++ 的语法规定：
+静态成员变量只在类内声明（static int id_counter;）
+不能在类中定义和初始化它
+必须在类外用作用域运算符 :: 来初始化一次：
+
+const 是函数尾部的修饰符 “这是一个不会修改类中任何成员变量的函数”
+用途：
+保证函数是只读操作，不能修改对象状态
+如果你用 const 对象调用函数，只能调用 const 成员函数
+    void show() const {
+        // x = 10; ❌ 编译错误：不能修改成员
+        cout << x << endl;
+    }
+    
+void printPersonInfo(const Person& p) {
+    p.putdata();  // ✅ 只有 putdata() 是 const 的才能调用
+}
+
+const Person& p ——“我承诺这个函数不会修改传进来的 p 对象”
+直接操作原对象，不拷贝，语法上像值但效率像指针
+
+| 传参方式     | 写法                | 意思                          |
+| 值传递      | `Person p`        | 拷贝一份对象（性能差）                 |
+| 指针传递     | `Person* p`       | 传对象地址，需要用 `p->putdata()` 调用 |
+| **引用传递** | `const Person& p` | ✅ 直接操作原对象，不拷贝，语法上像值但效率像指针   |
+
+
+void print(Person p)——值传递
+不推荐	会复制整个对象，浪费资源
+
+void print(Person* p)——指针	
+还可以	调用时要传地址，不如引用直观
+需要用 `p->putdata()` 调用 
+
+void print(const Person& p)	——常引用	
+推荐！	高效、不会改对象、语法简洁
+
+
+
+
+总结：
+✅ 析构函数需要 virtual（涉及父类指针调用子类析构，就不需要 virtual）
+C++ 社区中比较推荐一律加 virtual 析构，作为防御性写法。
+❌ 构造函数永远不能 virtual
+
+class ClassName{
+    protected:
+        // 子类能访问的成员
+    
+    private:
+        // 仅类内部能访问的成员
+        
+    public:
+    
+        ClassName();    // 构造函数：用于创建对象时初始化
+        
+        virtual ~ClassName(); // 析构函数：用于对象销毁时资源清理
+        // 若支持多态，一定要 virtual
+        
+        void dosomething() const;
+    
+        
+        // 虚函数：供子类 override，实现多态
+        virtual void getdata() = 0; // 如果 =0，表示是抽象接口
+        virtual void putdata() = 0;
+        
+    
+}
+
+
+「树/链表的指针访问」和「类继承调用子类方法」是不是一样的？
+
+TreeNode* root = new TreeNode();        // 创建树节点对象
+
+关系：没有继承关系，就是普通对象
+目的：管理数据结构中的节点关系
+继承：只定义一个类
+
+
+Person* p = new Student();              // 创建子类对象指向父类指针
+关系： 子类对象 + 父类指针（多态）
+目的：利用虚函数机制实现多态
+继承：涉及子类和父类的虚函数调用
+
+TreeNode* 是「数据结构」的指针
+Person* 是「多态」的父类指针，指向子类对象，用来触发虚函数机制（比如 putdata() 的多态）
+
+
+void putdata() const;
+这个函数不会修改当前对象的成员变量
+一个函数签名的限定符，表示函数是只读的，不会改类的成员变量
+
+const Person& p;
+我不会通过这个变量 p 修改它指向的对象
+这是对变量本身加限制（不能通过它去改东西）
+
+
+#include <cmath>
+#include <cstdio>
+#include <vector>
+#include <iostream>
+#include <algorithm>
+using namespace std;
+
+class Person{
+    protected:
+        int age;
+        string name;
+    public:
+         Person(){};//?
+         virtual void getdata() = 0;
+         virtual void putdata() const = 0;
+         virtual ~Person(){}
+    
+};
+
+class Professor : public Person{
+    private:
+        int publications;
+        int cur_id;
+        static int id_counter;
+    public:
+        Professor(){
+            cur_id = ++id_counter;
+        }
+        void getdata() override {
+            cin >> name >> age >> publications;
+        }
+        void putdata() const override {
+            cout << name << " " << age << " " << publications << " " << cur_id << endl;
+        }
+};
+
+int Professor::id_counter = 0;
+
+class Student : public Person{
+    private:
+        int marks[6];
+        int cur_id;
+        static int id_counter;
+    public:
+        Student(){
+            cur_id = ++id_counter;
+        }
+        
+        void getdata() override{
+            cin >> name >> age;
+            for (int i = 0; i<6; ++i){
+                cin >> marks[i];
+            }
+        }
+        
+        void putdata() const override{
+            int sum = 0;
+            for (int i = 0; i < 6; ++i) {
+                sum += marks[i];
+            }
+            cout << name << " " << age << " " << sum << " " << cur_id << endl;
+        }   
+};
+
+int Student::id_counter = 0;
+
+
+int main(){
+
+    int n, val;
+    cin>>n; //The number of objects that is going to be created.
+    Person *per[n];
+
+    for(int i = 0;i < n;i++){
+
+        cin>>val;
+        if(val == 1){
+            // If val is 1 current object is of type Professor
+            per[i] = new Professor;
+
+        }
+        else per[i] = new Student; // Else the current object is of type Student
+
+        per[i]->getdata(); // Get the data from the user.
+
+    }
+
+    for(int i=0;i<n;i++)
+        per[i]->putdata(); // Print the required output for each object.
+
+    return 0;
+
+}
+
+
+
+
+
+
+
+
+
+
+
+*******************************************************************************/
+
+#include <iostream>
+class Person{
+    protected:
+        string name;
+        int age;
+    
+    public:
+        virtual void getdata() = 0; // ?定义抽象接口 纯虚函数：子类必须实现
+        virtual void putdata() = 0;
+        virtual ~Person() {}  // ?析构函数要是 virtual，才能正确 delete 子类对象
+        //有多态（即用 Person* p = new Student();）
+        //析构函数必须写 virtual，否则只会调用基类析构函数，不会调用子类析构函数！
+    
+}
+
+
+class Professor : public Person{
+    protected:
+        int publications;
+        int cur_id;
+        static int id_counter; // ?所有教授共享的“计数器”
+    
+    public:
+        Professor(){
+            cur_id = ++ id_counter; // 每个对象构造时获取唯一编号
+        }
+        
+        void getdata() override {
+            cin >> name >> age >> publications;
+        }
+        
+        void putdata() override {
+            cout << name << " " << age << " " << publications << " " << cur_id << endl;
+        }
+    
+}
+
+int Professor::id_counter = 0; // ?静态变量定义（在类外）在类外定义并初始化静态变量
+
+class Student : public Person{
+    protected:
+        int marks[6];
+        int cur_id;
+        static int id_counter;
+    
+    public:
+        Student(){
+            cur_id = ++id_counter;
+            //?
+        }
+        
+        void getdata() override {
+            cin >> name >> age;
+            for (int i = 0; i < 6; ++i) cin >> marks[i];
+        } 
+        
+        
+}
+
+
+int main()
+{
+    std::cout<<"Hello World";
+
+    return 0;
+}
